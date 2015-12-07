@@ -1,10 +1,10 @@
 /* use strict */
 
 var gulp = require('gulp');
-var rimraf = require('rimraf');
 var browserify = require('browserify');
 var babelify = require('babelify');
 var vinylSourceStream = require('vinyl-source-stream');
+var del = require('del');
 
 const config = {
     source: './src/app.js',
@@ -12,9 +12,9 @@ const config = {
     outputFile: 'app.js'
 };
 
-gulp.task('clean', (done) => rimraf(config.outputDir, done));
+gulp.task('clean', () => del([ 'dist/**/*' ]));
 
-gulp.task('copy', () => gulp.src([ 'index.html', 'bubble.png', 'policies', 'sounds/**/*' ]).pipe(gulp.dest(config.outputDir)));
+gulp.task('copy', () => gulp.src([ 'index.html', 'images/**/*', 'policies', 'sounds/**/*' ]).pipe(gulp.dest(config.outputDir)));
 
 gulp.task('build', [ 'clean', 'copy' ], () => {
     browserify(config.source, { debug: true })
