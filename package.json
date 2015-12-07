@@ -1,0 +1,34 @@
+{
+  "name": "policyBubbles",
+  "version": "0.0.1",
+  "description": "Such polici. Much bubble. Wow.",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elbenvenutti/policyBubbles"
+  },
+  "keywords": [
+    "policy",
+    "bubble"
+  ],
+  "author": "Isma Perez",
+  "license": "private",
+  "bugs": {
+    "url": "https://github.com/elbenvenutti/policyBubbles/issues"
+  },
+  "homepage": "https://github.com/elbenvenutti/policyBubbles",
+  "devDependencies": {
+    "babel-core": "^6.3.13",
+    "babel-preset-es2015": "^6.1.18",
+    "babelify": "^7.2.0",
+    "browserify": "^12.0.1",
+    "gulp": "^3.9.0",
+    "howler": "^1.1.28",
+    "moment": "^2.10.6",
+    "rest": "^1.3.1",
+    "rimraf": "^2.4.4",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
