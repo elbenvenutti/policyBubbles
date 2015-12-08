@@ -1,18 +1,46 @@
-'use strict';
+"use strict";
+
+const ANIMATION_INTERVAL = 1000 / 60;
+const POLLING_INTERVAL = 1;
+const MINUTE_IN_MILLISECONDS = 60000;
+const PURCHASE = 0;
+const ENQUIRY = 1;
+const CANCEL = 2;
+
+const REVERSE_SOUNDS = false;
+const MIN_SOUND_PRICE = 60;
+const MAX_SOUND_PRICE = 600;
+
+const BUBBLE_IMAGE_SIZE = 100;
 
 var rest = require('rest');
 var moment = require('moment');
 var Howl = require('howler').Howl;
 
-const ANIMATION_INTERVAL = 1000 / 60;
-const POLLING_INTERVAL = 1;
-const MINUTE_IN_MILLISECONDS = 60000;
-
 var width = window.innerWidth;
 var height = window.innerHeight;
-var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '18', '19', '20', '21', '22', '23', '24', '25', '26','27', '28','29','30','31','32','33' ].map((i) => new Howl({
-    urls: [ `celesta/celesta0${i}.mp3` ]
-}));
+
+var paddedRange = (from, to) => {
+    var newRange = [];
+    for (let i = from; i <= to; i++) {
+        newRange.push(i);
+    }
+    return newRange.map((number) => `00${number}`.substr(-2, 2));
+};
+
+var sounds = paddedRange(1, 33).map((i) => new Howl({ urls: [`celesta/celesta0${i}.mp3`]}));
+
+var bubbles = [];
+
+var destroyBubble = (bubble) => bubbles.splice(bubbles.indexOf(bubble), 1);
+
+var loadBubbleImage = (colour) => {
+    var bubbleImage = new Image();
+    bubbleImage.src = `./${colour}Bubble.png`;
+    return bubbleImage;
+};
+
+var bubbleImages = [ 'green', 'orange', 'red' ].map((colour) => loadBubbleImage(colour));
 
 class Bubble {
     constructor(policy) {
@@ -22,48 +50,21 @@ class Bubble {
         this.speed = 0.15 + Math.random() / 3;
         this.interval = window.setInterval(this.tick.bind(this), ANIMATION_INTERVAL);
 
-        sounds[this.remap(this.policy.premium, 60, 600, 1, 33)].play();
+        sounds[this.soundIndexFor(this.policy.premium)].play();
     }
 
-    remap(x, oMin, oMax, nMin, nMax) {
-        if (x > oMax) {
-            x = oMax;
+    soundIndexFor(x) {
+        if (x > MAX_SOUND_PRICE) {
+            x = MAX_SOUND_PRICE;
         }
-        //range check
-        if (oMin == oMax) {
-            console.log("Warning: Zero input range");
-            return None;
-        };
+        var nMin = 0;
+        var nMax = sounds.length - 1;
 
-        if (nMin == nMax) {
-            console.log("Warning: Zero output range");
-            return None
-        }
+        var portion = (x - MIN_SOUND_PRICE) * (nMax - nMin) / (MAX_SOUND_PRICE - MIN_SOUND_PRICE);
 
-        //check reversed input range
-        var reverseInput = false;
-        var oldMin = Math.min(oMin, oMax);
-        var oldMax = Math.max(oMin, oMax);
-        if (oldMin != oMin) {
-            reverseInput = true;
-        }
-
-        //check reversed output range
-        var reverseOutput = false;
-        var newMin = Math.min(nMin, nMax)
-        var newMax = Math.max(nMin, nMax)
-        if (newMin != nMin) {
-            reverseOutput = true;
-        };
-
-        var portion = (x - oldMin) * (newMax - newMin) / (oldMax - oldMin)
-        if (reverseInput) {
-            portion = (oldMax - x) * (newMax - newMin) / (oldMax - oldMin);
-        };
-
-        var result = portion + newMin
-        if (reverseOutput) {
-            result = newMax - portion;
+        var result = portion + nMin;
+        if (REVERSE_SOUNDS) {
+            result = nMax - portion;
         }
 
         var number = Math.round(result);
@@ -87,26 +88,27 @@ class Bubble {
         context.save();
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        context.font = '20px helvetica';
         context.scale(scale, scale);
-        context.translate(this.x + (height - this.y) * Math.sin(this.y / 30) / 50 / scale, this.y / scale);
-        context.drawImage(bubbleImages[this.policy.colour], 0, 0, 100, 100);
+        context.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        context.font = 'bold 20px helvetica';
+        context.translate((this.x + (height - this.y) * Math.sin(this.y / 30) / 50) / scale, this.y / scale);
+        context.drawImage(bubbleImages[this.policy.action], 0, 0, BUBBLE_IMAGE_SIZE, BUBBLE_IMAGE_SIZE);
         context.fillText(`£${this.policy.premium.toFixed(2)}`, 50, 40);
         context.font = '14px helvetica';
         context.fillText(`${this.policy.postcode}`, 50, 60);
-        if (this.policy.colour === 'orange') {
-            context.fillText(this.policy.numberOfQuotes, 50, 80);
+        if (this.policy.action === ENQUIRY) {
+            context.font = 'bold 16px helvetica';
+            context.fillText(this.policy.numberOfQuotes, 50, 75);
         }
         context.restore();
     }
-};
+}
 
-var bubbles = [];
+var drawFrame;
 
-var destroyBubble = (bubble) => bubbles.splice(bubbles.indexOf(bubble), 1);
+var nextFrame = () => window.requestAnimationFrame(drawFrame);
 
-var drawFrame = () => {
+drawFrame = () => {
     var context = document.getElementById('main').getContext('2d');
     context.canvas.width = width;
     context.canvas.height = height;
@@ -119,57 +121,41 @@ var drawFrame = () => {
     nextFrame();
 };
 
-var nextFrame = () => window.requestAnimationFrame(drawFrame);
-
-var loadBubbleImage = (colour) => {
-    var bubbleImage = new Image();
-    bubbleImage.src = `./${colour}Bubble.png`;
-    return bubbleImage;
-}
-
-var bubbleImages = {
-    red: loadBubbleImage('red'),
-    green: loadBubbleImage('green'),
-    orange: loadBubbleImage('orange')
-};
-
-bubbleImages.orange.onload = () => {
-    poll()
-    setInterval(poll, POLLING_INTERVAL * MINUTE_IN_MILLISECONDS);
-    nextFrame();
-}
-
 var poll = () => rest(`./policies?minutes=${POLLING_INTERVAL}`).then((response) => {
     var data = JSON.parse(response.entity);
     var minDate;
     var policies = data.map((policyData) => {
         var date = new moment(new Date(policyData.created));
-        var colour = 'green';
+        var action = ENQUIRY;
         if (!date.isAfter(minDate)) {
             minDate = date;
         }
 
         if (policyData.event.indexOf('purchase') > -1) {
-            colour = 'orange'
+            action = PURCHASE;
         } else if (policyData.event.indexOf('cancel') > -1) {
-            colour = 'red'
+            action = CANCEL;
         }
 
         return {
             created: date,
             premium: parseFloat(policyData.premium.replace(/[£,]/g, '')),
             postcode: policyData.postcode,
-            colour: colour,
+            action: action,
             numberOfQuotes: policyData.number_of_quotes
-        }
+        };
     });
-
-    console.log(`will create ${policies.length} bubbles`);
 
     policies.forEach((policy, index) => {
         window.setTimeout(() => bubbles.push(new Bubble(policies[index])), policies[index].created.valueOf() - minDate.valueOf());
     });
 });
+
+bubbleImages[CANCEL].onload = () => {
+    poll();
+    setInterval(poll, POLLING_INTERVAL * MINUTE_IN_MILLISECONDS);
+    nextFrame();
+};
 
 window.addEventListener('resize', () => {
     width = window.innerWidth;
