@@ -10,8 +10,8 @@ const MINUTE_IN_MILLISECONDS = 60000;
 
 var width = window.innerWidth;
 var height = window.innerHeight;
-var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13' ].map((i) => new Howl({
-    urls: [ `wikki/wikki0${i}.mp3` ]
+var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '18', '19', '20', '21', '22', '23', '24', '25', '26','27' ].map((i) => new Howl({
+        urls: [ `celesta/celesta0${i}.mp3` ]
 }));
 
 class Bubble {
@@ -21,9 +21,57 @@ class Bubble {
         this.y = height;
         this.speed = 0.15 + Math.random() / 3;
         this.interval = window.setInterval(this.tick.bind(this), ANIMATION_INTERVAL);
-        var soundIndex = 13 - Math.floor(Math.min(1300, Math.max(100, this.policy.premium)) / 100);
-        sounds[soundIndex].play();
+
+        sounds[this.remap(this.policy.premium, 60, 550, 27, 1)].play();
     }
+
+    remap(x, oMin, oMax, nMin, nMax) {
+        if (x > oMax) {
+            x = oMax;
+        }
+        //range check
+        if (oMin == oMax) {
+            console.log("Warning: Zero input range");
+            return None;
+        };
+
+        if (nMin == nMax) {
+            console.log("Warning: Zero output range");
+            return None
+        }
+
+        //check reversed input range
+        var reverseInput = false;
+        var oldMin = Math.min(oMin, oMax);
+        var oldMax = Math.max(oMin, oMax);
+        if (oldMin != oMin) {
+            reverseInput = true;
+        }
+
+        //check reversed output range
+        var reverseOutput = false;
+        var newMin = Math.min(nMin, nMax)
+        var newMax = Math.max(nMin, nMax)
+        if (newMin != nMin) {
+            reverseOutput = true;
+        };
+
+        var portion = (x - oldMin) * (newMax - newMin) / (oldMax - oldMin)
+        if (reverseInput) {
+            portion = (oldMax - x) * (newMax - newMin) / (oldMax - oldMin);
+        };
+
+        var result = portion + newMin
+        if (reverseOutput) {
+            result = newMax - portion;
+        }
+
+        var number = Math.round(result);
+        console.log("sound index of " + number + " for premium " + x);
+        return number;
+    }
+
+
 
     tick() {
         this.y = this.y - this.speed;
@@ -35,7 +83,7 @@ class Bubble {
 
     draw(context) {
         var tick =
-        context.save();
+            context.save();
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.font = "20px serif";
@@ -89,34 +137,34 @@ bubbleImages.orange.onload = () => {
 
 var poll = () => rest(`./policies?minutes=${POLLING_INTERVAL}`).then((response) => {
     var data = JSON.parse(response.entity);
-    var minDate;
-    var policies = data.map((policyData) => {
+var minDate;
+var policies = data.map((policyData) => {
         var date = new moment(new Date(policyData.created));
-        if (!date.isAfter(minDate)) {
-            minDate = date;
-        }
+if (!date.isAfter(minDate)) {
+    minDate = date;
+}
 
-        var colour = 'green';
+var colour = 'green';
 
-        if (policyData.event.indexOf('purchase') > -1) { 
-            colour = 'orange'
-        } else if (policyData.event.indexOf('cancel') > -1) {
-            colour = 'red'
-        }
+if (policyData.event.indexOf('purchase') > -1) {
+    colour = 'orange'
+} else if (policyData.event.indexOf('cancel') > -1) {
+    colour = 'red'
+}
 
-        return {
-            created: date,
-            premium: parseFloat(policyData.premium.replace(/[£,]/g, '')),
-            postcode: policyData.postcode,
-            colour: colour,
-            numberOfQuotes: policyData.numberOfQuotes
-        }
-    });
+return {
+    created: date,
+    premium: parseFloat(policyData.premium.replace(/[£,]/g, '')),
+    postcode: policyData.postcode,
+    colour: colour,
+    numberOfQuotes: policyData.numberOfQuotes
+}
+});
 
-    console.log(`will create ${policies.length} bubbles`);
+console.log(`will create ${policies.length} bubbles`);
 
-    policies.forEach((policy, index) => {
-        window.setTimeout(() => bubbles.push(new Bubble(policies[index])),
-            policies[index].created.valueOf() - minDate.valueOf());
-    });
+policies.forEach((policy, index) => {
+    window.setTimeout(() => bubbles.push(new Bubble(policies[index])),
+policies[index].created.valueOf() - minDate.valueOf());
+});
 });
