@@ -10,7 +10,7 @@ const MINUTE_IN_MILLISECONDS = 60000;
 
 var width = window.innerWidth;
 var height = window.innerHeight;
-var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '18', '19', '20', '21', '22', '23', '24', '25', '26','27' ].map((i) => new Howl({
+var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '18', '19', '20', '21', '22', '23', '24', '25', '26','27', '28','29','30','31','32','33' ].map((i) => new Howl({
     urls: [ `celesta/celesta0${i}.mp3` ]
 }));
 
@@ -22,7 +22,7 @@ class Bubble {
         this.speed = 0.15 + Math.random() / 3;
         this.interval = window.setInterval(this.tick.bind(this), ANIMATION_INTERVAL);
 
-        sounds[this.remap(this.policy.premium, 60, 550, 27, 1)].play();
+        sounds[this.remap(this.policy.premium, 60, 600, 1, 33)].play();
     }
 
     remap(x, oMin, oMax, nMin, nMax) {
