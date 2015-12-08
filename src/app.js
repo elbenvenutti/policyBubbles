@@ -11,7 +11,7 @@ const MINUTE_IN_MILLISECONDS = 60000;
 var width = window.innerWidth;
 var height = window.innerHeight;
 var sounds = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '18', '19', '20', '21', '22', '23', '24', '25', '26','27' ].map((i) => new Howl({
-        urls: [ `celesta/celesta0${i}.mp3` ]
+    urls: [ `celesta/celesta0${i}.mp3` ]
 }));
 
 class Bubble {
@@ -71,29 +71,33 @@ class Bubble {
         return number;
     }
 
-
-
     tick() {
         this.y = this.y - this.speed;
         if (this.y < -100) {
             window.clearInterval(this.interval);
             destroyBubble(this);
+        } else if (this.y > height) {
+            this.y = height;
         }
     }
 
     draw(context) {
-        var tick =
-            context.save();
+        var scale = 0.5 + this.policy.premium / 400;
+
+        context.save();
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.font = "20px serif";
-        var scale = 0.5 + this.policy.premium / 400;
+        context.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        context.font = '20px helvetica';
         context.scale(scale, scale);
         context.translate(this.x + (height - this.y) * Math.sin(this.y / 30) / 50 / scale, this.y / scale);
         context.drawImage(bubbleImages[this.policy.colour], 0, 0, 100, 100);
         context.fillText(`£${this.policy.premium.toFixed(2)}`, 50, 40);
-        context.font = "14px serif";
+        context.font = '14px helvetica';
         context.fillText(`${this.policy.postcode}`, 50, 60);
+        if (this.policy.colour === 'orange') {
+            context.fillText(this.policy.numberOfQuotes, 50, 80);
+        }
         context.restore();
     }
 };
@@ -137,34 +141,37 @@ bubbleImages.orange.onload = () => {
 
 var poll = () => rest(`./policies?minutes=${POLLING_INTERVAL}`).then((response) => {
     var data = JSON.parse(response.entity);
-var minDate;
-var policies = data.map((policyData) => {
+    var minDate;
+    var policies = data.map((policyData) => {
         var date = new moment(new Date(policyData.created));
-if (!date.isAfter(minDate)) {
-    minDate = date;
-}
+        var colour = 'green';
+        if (!date.isAfter(minDate)) {
+            minDate = date;
+        }
 
-var colour = 'green';
+        if (policyData.event.indexOf('purchase') > -1) {
+            colour = 'orange'
+        } else if (policyData.event.indexOf('cancel') > -1) {
+            colour = 'red'
+        }
 
-if (policyData.event.indexOf('purchase') > -1) {
-    colour = 'orange'
-} else if (policyData.event.indexOf('cancel') > -1) {
-    colour = 'red'
-}
+        return {
+            created: date,
+            premium: parseFloat(policyData.premium.replace(/[£,]/g, '')),
+            postcode: policyData.postcode,
+            colour: colour,
+            numberOfQuotes: policyData.number_of_quotes
+        }
+    });
 
-return {
-    created: date,
-    premium: parseFloat(policyData.premium.replace(/[£,]/g, '')),
-    postcode: policyData.postcode,
-    colour: colour,
-    numberOfQuotes: policyData.numberOfQuotes
-}
+    console.log(`will create ${policies.length} bubbles`);
+
+    policies.forEach((policy, index) => {
+        window.setTimeout(() => bubbles.push(new Bubble(policies[index])), policies[index].created.valueOf() - minDate.valueOf());
+    });
 });
 
-console.log(`will create ${policies.length} bubbles`);
-
-policies.forEach((policy, index) => {
-    window.setTimeout(() => bubbles.push(new Bubble(policies[index])),
-policies[index].created.valueOf() - minDate.valueOf());
-});
-});
+window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+}, false);
