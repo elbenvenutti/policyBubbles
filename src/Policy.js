@@ -1,8 +1,10 @@
 'use strict';
 
+const PURCHASE = 0;
+
 module.exports = class {
     static get PURCHASE() {
-        return 0;
+        return PURCHASE;
     }
 
     static get ENQUIRY() {
