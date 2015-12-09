@@ -10,13 +10,23 @@ var created = Symbol();
 var speed = Symbol();
 var policy = Symbol();
 var x = Symbol();
+var drawExtraElements = Symbol();
 
-module.exports = class {
+var loadBubbleImage = (colour) => {
+    var bubbleImage = new Image();
+    bubbleImage.src = `./${colour}Bubble.png`;
+    return bubbleImage;
+};
+
+var bubbleImages = [ 'green', 'orange', 'red' ].map((colour) => loadBubbleImage(colour));
+
+class Bubble {
     constructor(_policy, _image) {
         this[policy] = _policy;
         this[speed] = SPEED / 2000 + Math.random() / SPEED;
         this[image] = _image;
         this[created] = Date.now();
+        this[drawExtraElements] = () => {};
 
         dispatchEvent(new CustomEvent('bubbleCreated', { detail: { premium: this[policy].premium } }));
     }
@@ -30,6 +40,7 @@ module.exports = class {
             } else if (y > this[height]) {
                 y = this[height];
             }
+            return y;
         };
 
         this[width] = context.canvas.width;
@@ -54,8 +65,36 @@ module.exports = class {
         context.fillText(`£${this[policy].premium.toFixed(2)}`, 50, 40);
         context.font = '14px helvetica';
         context.fillText(`${this[policy].postcode}`, 50, 60);
-        context.font = 'bold 16px helvetica';
-        context.fillText(this[policy].numberOfQuotes, 50, 75);
+        this[drawExtraElements](context);
         context.restore();
     }
+}
+
+class Red extends Bubble {
+    constructor(_policy) {
+        super(_policy, bubbleImages[2]);
+    }
+}
+
+class Amber extends Bubble {
+    constructor(_policy) {
+        super(_policy, bubbleImages[1]);
+
+        this[drawExtraElements] = (context) => {
+            context.font = 'bold 16px helvetica';
+            context.fillText(this[policy].numberOfQuotes, 50, 75);
+        };
+    }
+}
+
+class Green extends Bubble {
+    constructor(_policy) {
+        super(_policy, bubbleImages[0]);
+    }
+}
+
+module.exports = {
+    Red: Red,
+    Amber: Amber,
+    Green: Green
 };
