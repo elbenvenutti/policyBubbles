@@ -90,6 +90,7 @@ class Amber extends Bubble {
 class Green extends Bubble {
     constructor(_policy) {
         super(_policy, bubbleImages[0]);
+        dispatchEvent(new Event('purchaseBubbleCreated'));
     }
 }
 
