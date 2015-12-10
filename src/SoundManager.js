@@ -20,7 +20,7 @@ module.exports = class {
         };
 
         this[sounds] = paddedRange(1, 33).map((i) => new Howl({ urls: [`celesta/celesta0${i}.mp3`]}));
-        this[purchaseSound] = new Howl({ urls: ['santa/santa.mp3']});
+        this[purchaseSound] = new Howl({ urls: ['santa/santaMax.mp3']});
     }
 
     playPremium(premium) {
