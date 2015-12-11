@@ -28,6 +28,10 @@ class Bubble {
         this[created] = Date.now();
         this[drawExtraElements] = () => {};
 
+        this.notify();
+    }
+
+    notify() {
         dispatchEvent(new CustomEvent('bubbleCreated', { detail: { premium: this[policy].premium } }));
     }
 
@@ -90,6 +94,9 @@ class Amber extends Bubble {
 class Green extends Bubble {
     constructor(_policy) {
         super(_policy, bubbleImages[0]);
+    }
+
+    notify() {
         dispatchEvent(new Event('purchaseBubbleCreated'));
     }
 }

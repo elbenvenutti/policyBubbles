@@ -53,7 +53,7 @@ var createBubblesFromResponse = (response) => {
 
 var updatePolicyData = () => rest(`./policies?minutes=${POLLING_INTERVAL}`).then(createBubblesFromResponse);
 
-addEventListener('bubbleCreated', (event) => soundManager.playPremium(event.detail.premium));
+addEventListener('bubbleCreated', () => soundManager.playBells());
 addEventListener('purchaseBubbleCreated', () => soundManager.playPurchase());
 
 window.onload = () => {

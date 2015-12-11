@@ -8,6 +8,7 @@ var Howl = require('howler').Howl;
 
 var sounds = Symbol();
 var purchaseSound = Symbol();
+var bellSound = Symbol();
 
 module.exports = class {
     constructor() {
@@ -20,7 +21,8 @@ module.exports = class {
         };
 
         this[sounds] = paddedRange(1, 33).map((i) => new Howl({ urls: [`celesta/celesta0${i}.mp3`]}));
-        this[purchaseSound] = new Howl({ urls: ['santa/daSanta.mp3']});
+        this[purchaseSound] = new Howl({ urls: [ 'santa/daSanta.mp3' ] });
+        this[bellSound] = new Howl({ urls: [ 'santa/bells.mp3' ] });
     }
 
     playPremium(premium) {
@@ -37,5 +39,9 @@ module.exports = class {
 
     playPurchase() {
         this[purchaseSound].play();
+    }
+
+    playBells() {
+        this[bellSound].play();
     }
 };
